@@ -18,7 +18,10 @@
  */
 package codes.bytes.quartercask.sbt
 
-import com.amazonaws.{AmazonClientException, AmazonServiceException}
+import java.io.File
+
+import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener, SyncProgressListener}
+import com.amazonaws.{AmazonClientException, AmazonServiceException, AmazonWebServiceRequest}
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{Bucket, CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.TransferManager
@@ -30,33 +33,17 @@ private[quartercask] object AwsS3 {
   private lazy val client = new AmazonS3Client(AwsCredentials.provider)
 
   def pushJarToS3(jar: File, bucketId: S3BucketId, s3KeyPrefix: String): Try[S3Key] = {
-    try{
+    try {
       val key = s3KeyPrefix + jar.getName
-      val tx = new TransferManager()
+      val objectRequest = new PutObjectRequest(bucketId.value, key, jar)
+      objectRequest.setCannedAcl(CannedAccessControlList.AuthenticatedRead)
 
-      val upload = tx.upload(bucketId.value, key, jar)
 
-      // You can poll your transfer's status to check its progress
+      val objectMetadata= client.getObjectMetadata(bucketId.value, key)
 
-      if (!upload.isDone) {
-        System.out.println(s"Transfer: ${upload.getDescription}")
-        System.out.println(s"  - State: ${upload.getState}")
-        System.out.println(s"  - Progress: ${upload.getProgress.getBytesTransferred}")
-      }
+      addProgressListener(objectRequest, objectMetadata.getContentLength, key)
 
-      // Transfers also allow you to set a <code>ProgressListener</code> to receive
-      // asynchronous notifications about your transfer's progress.
-      //upload.addProgressListener(myProgressListener)
-
-      // Or you can block the current thread and wait for your transfer to
-      // to complete. If the transfer fails, this method will throw an
-      // AmazonClientException or AmazonServiceException detailing the reason.
-      //upload.waitForCompletion()
-
-      // After the upload is complete, call shutdownNow to release the resources.
-      tx.shutdownNow()
-
-      tx.getAmazonS3Client.setBucketAcl(bucketId.value, CannedAccessControlList.AuthenticatedRead)
+      client.putObject(objectRequest)
 
       Success(S3Key(key))
     } catch {
@@ -81,4 +68,55 @@ private[quartercask] object AwsS3 {
         Failure(ex)
     }
   }
+
+  /**
+    * Progress bar code borrowed from
+https://github.com/sbt/sbt-s3/blob/master/src/main/scala/S3Plugin.scala
+    */
+  private def progressBar(percent:Int) = {
+    val b="=================================================="
+    val s="                                                 "
+    val p=percent/2
+    val z:StringBuilder=new StringBuilder(80)
+    z.append("\r[")
+    z.append(b.substring(0,p))
+    if (p<50) {z.append(">"); z.append(s.substring(p))}
+    z.append("]   ")
+    if (p<5) z.append(" ")
+    if (p<50) z.append(" ")
+    z.append(percent)
+    z.append("%   ")
+    z.mkString
+  }
+
+  private def addProgressListener(request: AmazonWebServiceRequest, fileSize: Long, key: String) = {
+    request.setGeneralProgressListener(new SyncProgressListener {
+      var uploadedBytes = 0L
+      val fileName = {
+        val area = 30
+        val n = new File(key).getName
+        val l = n.length()
+        if (l > area - 3)
+          "..." + n.substring(l - area + 3)
+        else
+          n
+      }
+      override def progressChanged(progressEvent: ProgressEvent): Unit = {
+        if (progressEvent.getEventType == ProgressEventType.REQUEST_BYTE_TRANSFER_EVENT ||
+          progressEvent.getEventType == ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT) {
+          uploadedBytes = uploadedBytes + progressEvent.getBytesTransferred
+        }
+        print(progressBar(if (fileSize > 0) ((uploadedBytes * 100) / fileSize).toInt else 100))
+        print(s"Lambda JAR -> S3")
+        if (progressEvent.getEventType == ProgressEventType.TRANSFER_COMPLETED_EVENT)
+          println()
+      }
+    })
+  }
+
+  def prettyLastMsg(verb:String, objects:Seq[String], preposition:String, bucket:String) =
+    if (objects.length == 1) s"$verb '${objects.head}' $preposition the S3 bucket '$bucket'."
+    else                     s"$verb ${objects.length} objects $preposition the S3 bucket '$bucket'."
 }
+
+

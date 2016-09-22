@@ -30,8 +30,9 @@ object AwsLambdaPlugin extends AutoPlugin {
       "Create or Update the AWS Lambda project, with any appropriate trigger types & metadata.")
 
     val s3Bucket = settingKey[Option[String]]("ID of an S3 Bucket to upload the deployment jar to.")
-    val s3KeyPrefix = settingKey[String]("A prefix to the S3 key to which the jar will be " +
-      "uploaded.")
+    val s3KeyPrefix = settingKey[String](
+      "A prefix to the S3 key to which the jar will be " +
+        "uploaded.")
     val lambdaName = settingKey[Option[String]]("Name of the AWS Lambda to update or create.")
     val handlerName = settingKey[Option[String]](
       "Code path to the code for AWS Lambda  to execute, in form of <class::function>.")
@@ -99,16 +100,28 @@ object AwsLambdaPlugin extends AutoPlugin {
     AwsS3.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix) match {
       case Success(s3Key) =>
         for ((resolvedLambdaName, resolvedHandlerName) <- resolvedLambdaHandlers) yield {
-          AwsLambda.deployLambda(resolvedRegion, jar, resolvedLambdaName, resolvedHandlerName, resolvedRoleName, resolvedBucketId, s3Key, resolvedTimeout, resolvedMemory) match {
-          case Success(Left(deployFunctionCodeResult)) =>
-            resolvedLambdaName.value -> LambdaARN(deployFunctionCodeResult.getFunctionArn)
-          case Failure(exception) =>
-            sys
-              .error(
-                s"Failed to create lambda function: ${
-                  exception
-                    .getLocalizedMessage
-                }\n${exception.getStackTraceString}")
+          AwsLambda
+            .deployLambda(
+              resolvedRegion,
+              jar,
+              resolvedLambdaName,
+              resolvedHandlerName,
+              resolvedRoleName,
+              resolvedBucketId,
+              s3Key,
+              resolvedTimeout,
+              resolvedMemory) match {
+            case Success(Left(createFunctionCodeResult)) =>
+              resolvedLambdaName.value -> LambdaARN(createFunctionCodeResult.getFunctionArn)
+            case Success(Right(updateFunctionCodeResult)) =>
+              resolvedLambdaName.value -> LambdaARN(updateFunctionCodeResult.getFunctionArn)
+            case Failure(exception) =>
+              sys
+                .error(
+                  s"Failed to create lambda function: ${
+                    exception
+                      .getLocalizedMessage
+                  }\n${exception.getStackTraceString}")
           }
         }
       case Failure(exception) =>
@@ -170,9 +183,9 @@ object AwsLambdaPlugin extends AutoPlugin {
     val inputValue = readInput(
       s"Enter the name of the AWS region to connect to. (You also could have set the environment " +
         s"variable: ${
-        EnvironmentVariables
-          .region
-      } or the sbt setting: region)")
+          EnvironmentVariables
+            .region
+        } or the sbt setting: region)")
 
     Region(inputValue)
   }
@@ -182,9 +195,9 @@ object AwsLambdaPlugin extends AutoPlugin {
     val inputValue = readInput(
       s"Enter the AWS S3 bucket where the lambda jar will be stored. (You also could have set the" +
         s" environment variable: ${
-        EnvironmentVariables
-          .bucketId
-      } or the sbt setting: s3Bucket)")
+          EnvironmentVariables
+            .bucketId
+        } or the sbt setting: s3Bucket)")
     val bucketId = S3BucketId(inputValue)
 
     AwsS3.getBucket(bucketId) map (_ => bucketId) getOrElse {
@@ -218,9 +231,9 @@ object AwsLambdaPlugin extends AutoPlugin {
     readInput(
       s"Enter the name of the AWS Lambda handler. (You also could have set the environment " +
         s"variable: ${
-        EnvironmentVariables
-          .handlerName
-      } or the sbt setting: handlerName)")
+          EnvironmentVariables
+            .handlerName
+        } or the sbt setting: handlerName)")
 
 
   private def promptUserForRoleARN(): RoleARN = {
@@ -239,8 +252,9 @@ object AwsLambdaPlugin extends AutoPlugin {
           readRoleARN()
         }
       case None =>
-        val createDefaultRole = readInput(s"Default IAM role for AWS Lambda has not been created " +
-          s"yet. Create this role now? (y/n)")
+        val createDefaultRole = readInput(
+          s"Default IAM role for AWS Lambda has not been created " +
+            s"yet. Create this role now? (y/n)")
 
         if (createDefaultRole == "y") {
           AwsIAM.createBasicLambdaRole() match {
@@ -259,7 +273,8 @@ object AwsLambdaPlugin extends AutoPlugin {
 
   private def readRoleARN(): RoleARN = {
     val inputValue = readInput(
-      s"Enter the ARN of the IAM role for the Lambda. (You also could have set the environment variable: ${
+      s"Enter the ARN of the IAM role for the Lambda. (You also could have set the environment " +
+        s"variable: ${
         EnvironmentVariables
           .roleArn
       } or the sbt setting: roleArn)")
