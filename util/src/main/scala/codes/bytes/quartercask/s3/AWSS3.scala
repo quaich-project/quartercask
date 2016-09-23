@@ -79,7 +79,7 @@ https://github.com/sbt/sbt-s3/blob/master/src/main/scala/S3Plugin.scala
     val z:StringBuilder=new StringBuilder(80)
     z.append("\r[")
     z.append(b.substring(0,p))
-    if (p<50) {z.append(">"); z.append(s.substring(p))}
+    if (p<50) {z.append("=>"); z.append(s.substring(p))}
     z.append("]   ")
     if (p<5) z.append(" ")
     if (p<50) z.append(" ")
