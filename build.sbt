@@ -12,7 +12,6 @@ val projectVersion = "0.1-SNAPSHOT"
 val awsSdkVersion = "1.10.77"
 
 
-logLevel := Level.Debug
 
 sbtPlugin := true
 

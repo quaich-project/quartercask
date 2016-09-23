@@ -51,6 +51,7 @@ private[quartercask] object AwsLambda {
       }
 
       if (isNew) {
+        print(s"Creating new AWS Lambda function '${functionName.value}'\n")
         val request = {
           val r = new CreateFunctionRequest()
           r.setFunctionName(functionName.value)
@@ -74,10 +75,11 @@ private[quartercask] object AwsLambda {
 
         val createResult = client.createFunction(request)
 
-        println(s"Created Lambda: ${createResult.getFunctionArn}")
+        println(s"Created Lambda: ${createResult.getFunctionArn}\n")
         Success(Left(createResult))
 
       } else {
+        print(s"Updating existing AWS Lambda function '${functionName.value}'\n")
         val request = {
           val r = new UpdateFunctionCodeRequest()
           r.setFunctionName(functionName.value)
