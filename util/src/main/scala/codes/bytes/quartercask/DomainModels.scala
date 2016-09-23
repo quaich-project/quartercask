@@ -18,13 +18,14 @@
  */
 package codes.bytes.quartercask
 
-case class Region(value: String)
-case class S3BucketId(value: String)
-case class S3Key(value: String)
-case class LambdaName(value: String)
-case class LambdaARN(value: String)
-case class HandlerName(value: String)
-case class RoleARN(value: String)
+case class APIId(value: String) extends AnyVal
+case class Region(value: String) extends AnyVal
+case class S3BucketId(value: String) extends AnyVal
+case class S3Key(value: String) extends AnyVal
+case class LambdaName(value: String) extends AnyVal
+case class LambdaARN(value: String) extends AnyVal
+case class HandlerName(value: String) extends AnyVal
+case class RoleARN(value: String) extends AnyVal
 case class Timeout(value: Int) {
   require(value > 0 && value <= 300, "Lambda timeout must be between 1 and 300 seconds")
 }
@@ -35,12 +36,12 @@ case class Memory(value: Int) {
 
 
 object EnvironmentVariables {
-  val region = "AWS_REGION"
-  val bucketId = "AWS_LAMBDA_BUCKET_ID"
-  val s3KeyPrefix = "AWS_LAMBDA_S3_KEY_PREFIX"
-  val lambdaName = "AWS_LAMBDA_NAME"
-  val handlerName = "AWS_LAMBDA_HANDLER_NAME"
-  val roleArn = "AWS_LAMBDA_IAM_ROLE_ARN"
-  val timeout = "AWS_LAMBDA_TIMEOUT"
-  val memory = "AWS_LAMBDA_MEMORY"
+  val Region = "AWS_REGION"
+  val BucketId = "AWS_LAMBDA_BUCKET_ID"
+  val S3KeyPrefix = "AWS_LAMBDA_S3_KEY_PREFIX"
+  val LambdaName = "AWS_LAMBDA_NAME"
+  val HandlerName = "AWS_LAMBDA_HANDLER_NAME"
+  val RoleARN = "AWS_LAMBDA_IAM_ROLE_ARN"
+  val Timeout = "AWS_LAMBDA_TIMEOUT"
+  val Memory = "AWS_LAMBDA_MEMORY"
 }

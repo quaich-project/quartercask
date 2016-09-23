@@ -73,8 +73,8 @@ private[quartercask] object AWSS3 {
 https://github.com/sbt/sbt-s3/blob/master/src/main/scala/S3Plugin.scala
     */
   private def progressBar(percent:Int) = {
-    val b="••••••••••••••••••••••••••••••••••••••••••••••••••"
-    val s="                                                 "
+    val b="=================================================="
+    val s="                                                  "
     val p=percent/2
     val z:StringBuilder=new StringBuilder(80)
     z.append("\r[")

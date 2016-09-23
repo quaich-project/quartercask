@@ -138,17 +138,17 @@ object AWSLambdaPlugin extends AutoPlugin {
 
 
   private def resolveRegion(sbtSettingValueOpt: Option[String]): Region =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.region) map Region getOrElse
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.Region) map Region getOrElse
       promptUserForRegion()
 
 
   private def resolveBucketId(sbtSettingValueOpt: Option[String]): S3BucketId =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.bucketId) map S3BucketId getOrElse
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.BucketId) map S3BucketId getOrElse
       promptUserForS3BucketId()
 
 
   private def resolveS3KeyPrefix(sbtSettingValueOpt: Option[String]): String =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.s3KeyPrefix) getOrElse ""
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.S3KeyPrefix) getOrElse ""
 
 
   private def resolveLambdaHandlers(
@@ -159,9 +159,9 @@ object AWSLambdaPlugin extends AutoPlugin {
     }
     else {
       val l = lambdaName
-        .getOrElse(sys.env.getOrElse(EnvironmentVariables.lambdaName, promptUserForFunctionName()))
+        .getOrElse(sys.env.getOrElse(EnvironmentVariables.LambdaName, promptUserForFunctionName()))
       val h = handlerName
-        .getOrElse(sys.env.getOrElse(EnvironmentVariables.handlerName, promptUserForHandlerName()))
+        .getOrElse(sys.env.getOrElse(EnvironmentVariables.HandlerName, promptUserForHandlerName()))
       Iterator(l -> h)
     }
     lhs.map { case (l, h) => LambdaName(l) -> HandlerName(h) }.toMap
@@ -169,16 +169,16 @@ object AWSLambdaPlugin extends AutoPlugin {
 
 
   private def resolveRoleARN(sbtSettingValueOpt: Option[String]): RoleARN =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.roleArn) map RoleARN getOrElse
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.RoleARN) map RoleARN getOrElse
       promptUserForRoleARN()
 
 
   private def resolveTimeout(sbtSettingValueOpt: Option[Int]): Option[Timeout] =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.timeout).map(_.toInt) map Timeout
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.Timeout).map(_.toInt) map Timeout
 
 
   private def resolveMemory(sbtSettingValueOpt: Option[Int]): Option[Memory] =
-    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.memory).map(_.toInt) map Memory
+    sbtSettingValueOpt orElse sys.env.get(EnvironmentVariables.Memory).map(_.toInt) map Memory
 
 
   private def promptUserForRegion(): Region = {
@@ -186,7 +186,7 @@ object AWSLambdaPlugin extends AutoPlugin {
       s"Enter the name of the AWS region to connect to. (You also could have set the environment " +
         s"variable: ${
           EnvironmentVariables
-            .region
+            .Region
         } or the sbt setting: region)")
 
     Region(inputValue)
@@ -198,7 +198,7 @@ object AWSLambdaPlugin extends AutoPlugin {
       s"Enter the AWS S3 bucket where the lambda jar will be stored. (You also could have set the" +
         s" environment variable: ${
           EnvironmentVariables
-            .bucketId
+            .BucketId
         } or the sbt setting: s3Bucket)")
     val bucketId = S3BucketId(inputValue)
 
@@ -225,7 +225,7 @@ object AWSLambdaPlugin extends AutoPlugin {
     readInput(
       s"Enter the name of the AWS Lambda. (You also could have set the environment variable: ${
         EnvironmentVariables
-          .lambdaName
+          .LambdaName
       } or the sbt setting: lambdaName)")
 
 
@@ -234,7 +234,7 @@ object AWSLambdaPlugin extends AutoPlugin {
       s"Enter the name of the AWS Lambda handler. (You also could have set the environment " +
         s"variable: ${
           EnvironmentVariables
-            .handlerName
+            .HandlerName
         } or the sbt setting: handlerName)")
 
 
@@ -278,7 +278,7 @@ object AWSLambdaPlugin extends AutoPlugin {
       s"Enter the ARN of the IAM role for the Lambda. (You also could have set the environment " +
         s"variable: ${
         EnvironmentVariables
-          .roleArn
+          .RoleARN
       } or the sbt setting: roleArn)")
     RoleARN(inputValue)
   }
